@@ -44,7 +44,7 @@ public class MessageSourceFactory {
     private static List<MessageSource> createFromWildcard(String messageFilePath) {
         Resource[] resources;
         try {
-            resources = RESOURCE_RESOLVER.getResources("classpath:" + messageFilePath);
+            resources = RESOURCE_RESOLVER.getResources("classpath*:" + messageFilePath);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to resolve wildcard pattern: " + messageFilePath, e);
         }
