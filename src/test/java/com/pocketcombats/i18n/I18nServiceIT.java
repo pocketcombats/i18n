@@ -4,11 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Locale;
@@ -17,7 +15,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {I18nServiceIT.Conf.class})
+@ContextConfiguration(classes = IntegrationTestConfiguration.class)
+@TestPropertySource("classpath:application-test.properties")
 class I18nServiceIT {
 
     @Autowired
@@ -101,11 +100,5 @@ class I18nServiceIT {
         LocalizedString localizedString = LocalizedString.simple("untranslated.key");
         assertThat(i18nService.getMessage(localizedString))
                 .isEqualTo("This string has no translation");
-    }
-
-    @Configuration
-    @PropertySource("classpath:application-test.properties")
-    @Import(IntegrationTestConfiguration.class)
-    static class Conf {
     }
 }

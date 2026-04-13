@@ -1,5 +1,7 @@
 package com.pocketcombats.i18n.msgsource;
 
+import org.springframework.core.io.Resource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,26 +29,52 @@ public class PropertiesFileMessageSource implements MessageSource {
     private final Properties properties;
     private final Set<String> codes;
 
-    /**
-     * @param propertiesFilePath classpath-relative path to a UTF-8 properties file
-     */
-    public PropertiesFileMessageSource(String propertiesFilePath) {
-        this.properties = loadProperties(propertiesFilePath);
+    private PropertiesFileMessageSource(Properties properties) {
+        this.properties = properties;
         this.codes = properties.stringPropertyNames().stream()
                 .filter(VARIANT_PATTERN.asPredicate().negate())
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * @param propertiesFilePath classpath-relative path to a UTF-8 properties file
+     */
+    public PropertiesFileMessageSource(String propertiesFilePath) {
+        this(loadProperties(propertiesFilePath));
+    }
+
+    /**
+     * @param resource Spring {@link Resource} pointing to a UTF-8 properties file
+     */
+    public PropertiesFileMessageSource(Resource resource) {
+        this(loadProperties(resource));
+    }
+
     private static Properties loadProperties(String filePath) {
-        Properties properties = new Properties();
         try (
                 InputStream inputStream = getResourceAsStream(filePath);
                 InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)
         ) {
-            properties.load(inputReader);
+            return readProperties(inputReader);
         } catch (IOException e) {
             throw new IllegalStateException("Unable to load properties from " + filePath);
         }
+    }
+
+    private static Properties loadProperties(Resource resource) {
+        try (
+                InputStream inputStream = resource.getInputStream();
+                InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)
+        ) {
+            return readProperties(inputReader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to load properties from " + resource);
+        }
+    }
+
+    private static Properties readProperties(InputStreamReader reader) throws IOException {
+        Properties properties = new Properties();
+        properties.load(reader);
         return properties;
     }
 
