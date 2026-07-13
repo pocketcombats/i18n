@@ -6,6 +6,7 @@ Small Java library for localized messages built around a serializable `Localized
 - `LocalizedString` types: `direct`, `simple`, `formatted`, `joined`, composable and nestable
 - ICU MessageFormat arguments (including other `LocalizedString` as values)
 - Multiple message variants per code (e.g., `greeting`, `greeting.1`, …) with stable, per‑instance selection via an internal seed
+- Message sources from UTF‑8 `.properties` files; paths support wildcards (`classpath*:`) and `;`‑separated lists
 - Spring Boot auto‑configuration for the service and Jackson module
 - JPA attribute converter for persisting `LocalizedString` as its raw representation
 
@@ -17,7 +18,7 @@ Add a dependency:
 <dependency>
   <groupId>com.pocketcombats</groupId>
   <artifactId>i18n</artifactId>
-  <version>1.0</version>
+  <version>1.3</version>
 </dependency>
 ```
 
@@ -66,7 +67,9 @@ class GreetingController {
 
 Notes:
 - Auto‑config class: `com.pocketcombats.i18n.spring.I18nConfiguration` (picks up properties, wires `I18nService`, registers the Jackson module).
-- Locale resolution uses Spring’s `LocaleContextHolder` (e.g., from `Accept-Language`).
+- Message files are read as UTF‑8, not the ISO‑8859‑1 default of Java `.properties` — no `\uXXXX` escaping needed for non‑ASCII text.
+- Locale resolution uses Spring’s `LocaleContextHolder` (e.g., from `Accept-Language`). The requested locale is matched exactly, then by language only (`ru-RU` → `ru`), then falls back to `default-locale`; a matched non‑default locale still falls back to the default for any codes it is missing.
+- `debug-mode: true` skips translation and returns each `LocalizedString`'s raw `toString()` (code, args, seed) — handy for spotting missing or wrong codes during development.
 
 ## Persistence (JPA)
 
@@ -85,7 +88,8 @@ class Item {
 }
 ```
 
-This keeps all translation logic outside the database. Translation happens at the serialization time.
+The converter auto‑applies, so `LocalizedString` fields need no `@Convert` annotation.
+This keeps all translation logic outside the database — translation to display text happens later, at serialization time.
 
 ## Message variants and the internal seed
 
