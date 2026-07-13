@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+/**
+ * Concatenates several {@link LocalizedString}s into a single message, resolving
+ * each independently and joining the results with the given delimiter.
+ */
 @JsonTypeName("joined")
 public final class JoinedLocalizedString extends LocalizedString {
 
