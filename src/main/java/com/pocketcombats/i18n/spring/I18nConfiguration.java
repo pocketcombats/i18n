@@ -25,8 +25,8 @@ public class I18nConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public MessageFormatResolverBundle messageBundle(I18nProperties i18nProperties) {
-        Map<Locale, MessageFormatResolver> localeToSource = i18nProperties.localeToMessages().entrySet().stream()
-                .collect(Collectors.toMap(
+        Map<Locale, MessageFormatResolver> localeToSource = i18nProperties.localeToMessages().entrySet().parallelStream()
+                .collect(Collectors.toConcurrentMap(
                         locale2path -> Locale.forLanguageTag(locale2path.getKey()),
                         locale2path -> createMessageFormatter(locale2path.getValue(), Locale.forLanguageTag(locale2path.getKey()))
                 ));

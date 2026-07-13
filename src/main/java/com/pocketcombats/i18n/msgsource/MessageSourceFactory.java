@@ -52,7 +52,7 @@ public class MessageSourceFactory {
             throw new IllegalArgumentException("No classpath resources matched the pattern: " + messageFilePath);
         }
 
-        return Arrays.stream(resources)
+        return Arrays.stream(resources).parallel()
                 .<MessageSource>map(resource -> {
                     String filename = resource.getFilename();
                     if (filename == null) {
