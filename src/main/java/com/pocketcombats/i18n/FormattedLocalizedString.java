@@ -116,7 +116,6 @@ public final class FormattedLocalizedString extends LocalizedString {
         return new EqualsBuilder()
                 .append(code, that.code)
                 .append(args, that.args)
-                .append(seed, that.seed)
                 .isEquals();
     }
 
@@ -125,7 +124,6 @@ public final class FormattedLocalizedString extends LocalizedString {
         return new HashCodeBuilder()
                 .append(code)
                 .append(args)
-                .append(seed)
                 .toHashCode();
     }
 }
