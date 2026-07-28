@@ -4,7 +4,7 @@
 
     <groupId>com.pocketcombats</groupId>
     <artifactId>i18n</artifactId>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
 
     <name>LocalizedString</name>
     <description>
@@ -168,7 +168,7 @@
         <connection>scm:git:git://github.com/pocketcombats/i18n.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/pocketcombats/i18n.git</developerConnection>
         <url>https://github.com/pocketcombats/i18n/tree/master/</url>
-        <tag>v1.4</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
