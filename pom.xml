@@ -144,8 +144,6 @@
                             <arguments>--strict-checksums</arguments>
                             <tagNameFormat>v@{project.version}</tagNameFormat>
                             <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <useReleaseProfile>true</useReleaseProfile>
-                            <releaseProfiles>release</releaseProfiles>
                             <goals>deploy</goals>
                         </configuration>
                     </plugin>
