@@ -13,6 +13,8 @@ open module pocketcombats.i18n {
     requires spring.boot;
     requires spring.boot.autoconfigure;
     requires static jakarta.persistence;
+    requires static spring.orm;
+    requires static spring.boot.jpa;
 
     exports com.pocketcombats.i18n;
     exports com.pocketcombats.i18n.msgsource;

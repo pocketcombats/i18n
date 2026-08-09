@@ -1,1 +1,2 @@
 com.pocketcombats.i18n.spring.I18nConfiguration
+com.pocketcombats.i18n.persistence.PersistenceAutoConfiguration

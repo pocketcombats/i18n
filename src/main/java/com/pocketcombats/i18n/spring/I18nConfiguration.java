@@ -6,19 +6,18 @@ import com.pocketcombats.i18n.formatter.MessageFormatResolverBundle;
 import com.pocketcombats.i18n.formatter.MessageFormatResolverFactory;
 import com.pocketcombats.i18n.jackson.I18nModule;
 import com.pocketcombats.i18n.jackson.LocalizedStringJacksonSerializer;
+import com.pocketcombats.i18n.persistence.PersistenceAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@AutoConfiguration
-@ComponentScan(basePackages = "com.pocketcombats.i18n")
+@AutoConfiguration(after = PersistenceAutoConfiguration.class)
 @EnableConfigurationProperties(I18nProperties.class)
 public class I18nConfiguration {
 
