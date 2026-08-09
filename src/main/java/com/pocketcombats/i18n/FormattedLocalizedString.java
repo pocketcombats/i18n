@@ -43,10 +43,16 @@ public final class FormattedLocalizedString extends LocalizedString {
     public String getMessage(MessageFormatResolver messageFormatResolver) {
         if (args.isEmpty()) {
             List<String> messages = messageFormatResolver.getMessagesFromSource(code);
+            if (messages.isEmpty()) {
+                throw new IllegalArgumentException("No message for code " + code);
+            }
             return messages.get(seed % messages.size());
         } else {
             Map<String, Object> formattedArgs = getFormattedArgs(messageFormatResolver);
             List<MessageFormat> messageFormats = messageFormatResolver.getMessageFormatsForCode(code);
+            if (messageFormats.isEmpty()) {
+                throw new IllegalArgumentException("No message for code " + code);
+            }
             MessageFormat messageFormat = messageFormats.get(seed % messageFormats.size());
             // MessageFormat is not thread-safe but supports cloning
             return messageFormat.clone().format(formattedArgs);

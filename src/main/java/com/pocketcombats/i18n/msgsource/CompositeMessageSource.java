@@ -5,6 +5,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Combines several message sources for a single locale.
+ * <p>
+ * A code is resolved by the first delegate that declares it, so earlier delegates
+ * shadow later ones.
+ * Unknown codes yield an empty list.
+ */
 public class CompositeMessageSource implements MessageSource {
 
     private final List<MessageSource> delegates;
@@ -33,6 +40,6 @@ public class CompositeMessageSource implements MessageSource {
                 return delegate.getMessages(code);
             }
         }
-        throw new IllegalArgumentException("No message for code " + code);
+        return List.of();
     }
 }

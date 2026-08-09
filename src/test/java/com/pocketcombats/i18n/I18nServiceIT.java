@@ -101,4 +101,32 @@ class I18nServiceIT {
         assertThat(i18nService.getMessage(localizedString))
                 .isEqualTo("This string has no translation");
     }
+
+    @Test
+    void fallbackToDefaultLocaleForCodeMissingFromEveryFile() {
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+        LocalizedString localizedString = LocalizedString.formatted(
+                "character.janny.message.do_not_fear_you",
+                Map.of("WHO", "Scrub")
+        );
+        assertThat(i18nService.getMessage(localizedString)).isEqualTo("I do not fear you, Scrub");
+    }
+
+    @Test
+    void messageCodesIncludeUntranslatedDefaultLocaleCodes() {
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+        assertThat(i18nService.getMessageCodes())
+                .contains("character.archibald.name", "character.janny.name")
+                .contains("untranslated.key", "multiple.property.files.key");
+    }
+
+    @Test
+    void everyReportedMessageCodeIsResolvable() {
+        LocaleContextHolder.setLocale(Locale.forLanguageTag("ru"));
+        assertThat(i18nService.getMessageCodes())
+                .isNotEmpty()
+                .allSatisfy(code ->
+                        assertThat(i18nService.getMessage(LocalizedString.simple(code))).isNotNull()
+                );
+    }
 }
