@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.i18n.LocaleContextHolder;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,19 +35,20 @@ public class I18nConfiguration {
         }
         Locale defaultLocale = parseLanguageTag(i18nProperties.defaultLocale(), DEFAULT_LOCALE);
 
-        Map<Locale, MessageFormatResolver> localeToSource = localeToMessages.entrySet().parallelStream()
+        Map<Locale, MessageFormatResolver> localeToSource = localeToMessages.entrySet().stream()
                 .map(locale2path -> Map.entry(
                         parseLanguageTag(locale2path.getKey(), LOCALE_TO_MESSAGES + '.' + locale2path.getKey()),
                         locale2path.getValue()
                 ))
-                .collect(Collectors.toConcurrentMap(
+                .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         locale2path -> createMessageFormatter(locale2path.getValue(), locale2path.getKey()),
                         (first, second) -> {
                             throw new IllegalStateException(
                                     LOCALE_TO_MESSAGES + " must not contain two entries that resolve"
                                             + " to the same locale");
-                        }
+                        },
+                        LinkedHashMap::new
                 ));
 
         if (!localeToSource.containsKey(defaultLocale)) {

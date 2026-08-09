@@ -52,14 +52,19 @@ public class MessageSourceFactory {
             throw new IllegalArgumentException("No classpath resources matched the pattern: " + messageFilePath);
         }
 
-        return Arrays.stream(resources).parallel()
-                .<MessageSource>map(resource -> {
-                    String filename = resource.getFilename();
-                    if (filename == null) {
-                        throw new IllegalArgumentException("Cannot determine filename for resource: " + resource);
-                    }
-                    return new PropertiesFileMessageSource(resource);
-                })
+        return Arrays.stream(resources)
+                .map(MessageSourceFactory::createFromResource)
                 .toList();
+    }
+
+    private static MessageSource createFromResource(Resource resource) {
+        String filename = resource.getFilename();
+        if (filename == null) {
+            throw new IllegalArgumentException("Cannot determine filename for resource: " + resource);
+        }
+        if (!filename.endsWith(".properties")) {
+            throw new IllegalArgumentException("Unsupported extension: " + filename);
+        }
+        return new PropertiesFileMessageSource(resource);
     }
 }
