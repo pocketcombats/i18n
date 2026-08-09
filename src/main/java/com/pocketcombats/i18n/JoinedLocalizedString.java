@@ -8,8 +8,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Concatenates several {@link LocalizedString}s into a single message, resolving
@@ -27,7 +27,7 @@ public final class JoinedLocalizedString extends LocalizedString {
             @JsonProperty("strings") Collection<? extends LocalizedString> strings
     ) {
         this.delimiter = delimiter;
-        this.strings = strings;
+        this.strings = List.copyOf(strings);
     }
 
     @Override
@@ -69,6 +69,6 @@ public final class JoinedLocalizedString extends LocalizedString {
     }
 
     public Collection<? extends LocalizedString> getStrings() {
-        return new ArrayList<>(strings);
+        return strings;
     }
 }
