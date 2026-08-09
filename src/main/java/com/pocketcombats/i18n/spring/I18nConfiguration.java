@@ -7,6 +7,7 @@ import com.pocketcombats.i18n.formatter.MessageFormatResolverFactory;
 import com.pocketcombats.i18n.jackson.I18nModule;
 import com.pocketcombats.i18n.jackson.LocalizedStringJacksonSerializer;
 import com.pocketcombats.i18n.persistence.PersistenceAutoConfiguration;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,18 +22,61 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties(I18nProperties.class)
 public class I18nConfiguration {
 
+    private static final String LOCALE_TO_MESSAGES = "i18n.locale-to-messages";
+    private static final String DEFAULT_LOCALE = "i18n.default-locale";
+
     @Bean
     @ConditionalOnMissingBean
     public MessageFormatResolverBundle messageBundle(I18nProperties i18nProperties) {
-        Map<Locale, MessageFormatResolver> localeToSource = i18nProperties.localeToMessages().entrySet().parallelStream()
+        Map<String, String> localeToMessages = i18nProperties.localeToMessages();
+        if (localeToMessages == null || localeToMessages.isEmpty()) {
+            throw new IllegalStateException(LOCALE_TO_MESSAGES + " must configure at least one locale");
+        }
+        Locale defaultLocale = parseLanguageTag(i18nProperties.defaultLocale(), DEFAULT_LOCALE);
+
+        Map<Locale, MessageFormatResolver> localeToSource = localeToMessages.entrySet().parallelStream()
+                .map(locale2path -> Map.entry(
+                        parseLanguageTag(locale2path.getKey(), LOCALE_TO_MESSAGES + '.' + locale2path.getKey()),
+                        locale2path.getValue()
+                ))
                 .collect(Collectors.toConcurrentMap(
-                        locale2path -> Locale.forLanguageTag(locale2path.getKey()),
-                        locale2path -> createMessageFormatter(locale2path.getValue(), Locale.forLanguageTag(locale2path.getKey()))
+                        Map.Entry::getKey,
+                        locale2path -> createMessageFormatter(locale2path.getValue(), locale2path.getKey()),
+                        (first, second) -> {
+                            throw new IllegalStateException(
+                                    LOCALE_TO_MESSAGES + " must not contain two entries that resolve"
+                                            + " to the same locale");
+                        }
                 ));
-        return new MessageFormatResolverBundle(
-                localeToSource,
-                Locale.forLanguageTag(i18nProperties.defaultLocale())
-        );
+
+        if (!localeToSource.containsKey(defaultLocale)) {
+            throw new IllegalStateException(
+                    DEFAULT_LOCALE + "=\"" + i18nProperties.defaultLocale() + "\" has no entry in "
+                            + LOCALE_TO_MESSAGES + ", so messages missing from a locale could not"
+                            + " fall back to anything. Configured locales: " + localeToSource.keySet()
+            );
+        }
+
+        return new MessageFormatResolverBundle(localeToSource, defaultLocale);
+    }
+
+    /**
+     * Rejects tags that {@link Locale#forLanguageTag} cannot make sense of.
+     * Such a tag yields {@link Locale#ROOT}, which no user locale ever matches, so the entry silently
+     * does nothing. The usual cause is the underscore form that {@link Locale#toString()} prints.
+     */
+    private static Locale parseLanguageTag(@Nullable String languageTag, String property) {
+        if (languageTag == null || languageTag.isBlank()) {
+            throw new IllegalStateException(
+                    property + " must be set to a language tag such as \"en\" or \"en-US\"");
+        }
+        Locale locale = Locale.forLanguageTag(languageTag);
+        if (Locale.ROOT.equals(locale)) {
+            throw new IllegalStateException(
+                    property + "=\"" + languageTag + "\" is not a valid language tag."
+                            + " Use the BCP 47 form with a hyphen, such as \"en\" or \"en-US\"");
+        }
+        return locale;
     }
 
     private MessageFormatResolver createMessageFormatter(String messageFilePath, Locale locale) {
