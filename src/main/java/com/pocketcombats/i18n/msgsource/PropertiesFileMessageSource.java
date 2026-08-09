@@ -87,7 +87,7 @@ public class PropertiesFileMessageSource implements MessageSource {
         ) {
             return readProperties(inputReader);
         } catch (IOException e) {
-            throw new IllegalStateException("Unable to load properties from " + filePath);
+            throw new IllegalStateException("Unable to load properties from " + filePath, e);
         }
     }
 
@@ -98,7 +98,7 @@ public class PropertiesFileMessageSource implements MessageSource {
         ) {
             return readProperties(inputReader);
         } catch (IOException e) {
-            throw new IllegalStateException("Unable to load properties from " + resource);
+            throw new IllegalStateException("Unable to load properties from " + resource, e);
         }
     }
 
