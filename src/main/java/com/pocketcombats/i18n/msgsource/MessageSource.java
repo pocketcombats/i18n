@@ -8,7 +8,7 @@ import java.util.Set;
  * <p>
  * Implementations should return an empty list when a code is unknown.
  * Variants of the same code may be represented by numeric suffixes
- * (e.g. {@code greeting}, {@code greeting.1}, {@code greeting.2}, up to {@code greeting.10}).
+ * (e.g. {@code greeting}, {@code greeting.1}, {@code greeting.2}, up to {@code greeting.9}).
  */
 public interface MessageSource {
 
