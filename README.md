@@ -1,6 +1,6 @@
 # PocketCombats i18n
 
-Small Java library for localized messages built around a serializable `LocalizedString` abstraction and a pluggable message source/formatter stack (ICU MessageFormat). It integrates with Spring Boot (auto‑configuration), Jackson, and JPA.
+Small Java library for localized messages built around a serializable `LocalizedString` abstraction and a pluggable message source/formatter stack (ICU MessageFormat). It integrates with Spring Boot 4 (auto‑configuration), Jackson, and JPA.
 
 ## Features
 - `LocalizedString` types: `direct`, `simple`, `formatted`, `joined`, composable and nestable
@@ -8,7 +8,7 @@ Small Java library for localized messages built around a serializable `Localized
 - Multiple message variants per code (e.g., `greeting`, `greeting.1`, …) with stable, per‑instance selection via an internal seed
 - Message sources from UTF‑8 `.properties` files; paths support wildcards (`classpath*:`) and `;`‑separated lists
 - Spring Boot auto‑configuration for the service and Jackson module
-- JPA attribute converter for persisting `LocalizedString` as its raw representation
+- JPA attribute converter for persisting `LocalizedString` as JSON, not as translated text
 
 ## Quick start (Spring Boot)
 
@@ -18,7 +18,7 @@ Add a dependency:
 <dependency>
   <groupId>com.pocketcombats</groupId>
   <artifactId>i18n</artifactId>
-  <version>1.3</version>
+  <version>1.5</version>
 </dependency>
 ```
 
@@ -70,6 +70,7 @@ Notes:
 - Message files are read as UTF‑8, not the ISO‑8859‑1 default of Java `.properties` — no `\uXXXX` escaping needed for non‑ASCII text.
 - Locale resolution uses Spring’s `LocaleContextHolder` (e.g., from `Accept-Language`). The requested locale is matched exactly, then by language only (`ru-RU` → `ru`), then falls back to `default-locale`; a matched non‑default locale still falls back to the default for any codes it is missing.
 - `debug-mode: true` skips translation and returns each `LocalizedString`'s raw `toString()` (code, args, seed) — handy for spotting missing or wrong codes during development.
+- `default-locale` is required, must be a BCP 47 tag (`en-US`, not `en_US`), and must have its own `locale-to-messages` entry. Invalid values fail at startup.
 
 ## Persistence (JPA)
 
@@ -100,6 +101,8 @@ greeting=Hello
 greeting.1=Hi
 greeting.2=Hey
 ```
+
+Suffixes run from `.1` to `.9`, and a gap ends the sequence: without `greeting.1`, a `greeting.2` is never used.
 
 When resolving `LocalizedString.simple("greeting")`, one variant is selected. Selection is stable for the lifetime of that `LocalizedString` instance thanks to an internal seed.   
 Creating a new instance may choose a different variant.  
