@@ -8,8 +8,9 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -21,19 +22,27 @@ import java.util.stream.Collectors;
  * Base codes are the keys without a numeric suffix. Additional variants are read
  * from keys with suffixes {@code .1}, {@code .2}, ... up to {@code .9}.
  * Unknown codes yield an empty list.
+ * <p>
+ * The file is read once and flattened into an immutable code-to-variants map, so resolving a
+ * message is a single map lookup that allocates nothing.
  */
 public class PropertiesFileMessageSource implements MessageSource {
 
     private static final Pattern VARIANT_PATTERN = Pattern.compile("\\.\\d+$");
 
-    private final Properties properties;
+    /**
+     * Highest numeric suffix considered when collecting variants of a code.
+     */
+    private static final int MAX_VARIANT_SUFFIX = 9;
+
+    private final Map<String, List<String>> messages;
     private final Set<String> codes;
 
     private PropertiesFileMessageSource(Properties properties) {
-        this.properties = properties;
+        this.messages = index(properties);
         this.codes = properties.stringPropertyNames().stream()
                 .filter(VARIANT_PATTERN.asPredicate().negate())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -48,6 +57,27 @@ public class PropertiesFileMessageSource implements MessageSource {
      */
     public PropertiesFileMessageSource(Resource resource) {
         this(loadProperties(resource));
+    }
+
+    /**
+     * Flattens the raw properties into a lookup of a key to its variant chain.
+     */
+    private static Map<String, List<String>> index(Properties properties) {
+        Set<String> keys = properties.stringPropertyNames();
+        Map<String, List<String>> index = new HashMap<>(keys.size());
+        for (String key : keys) {
+            List<String> variants = new ArrayList<>(1);
+            variants.add(properties.getProperty(key));
+            for (int i = 1; i <= MAX_VARIANT_SUFFIX; i++) {
+                String variant = properties.getProperty(key + "." + i);
+                if (variant == null) {
+                    break;
+                }
+                variants.add(variant);
+            }
+            index.put(key, List.copyOf(variants));
+        }
+        return Map.copyOf(index);
     }
 
     private static Properties loadProperties(String filePath) {
@@ -97,20 +127,6 @@ public class PropertiesFileMessageSource implements MessageSource {
 
     @Override
     public List<String> getMessages(String code) {
-        String message = properties.getProperty(code);
-        if (message == null) {
-            return Collections.emptyList();
-        }
-        List<String> messages = new ArrayList<>();
-        messages.add(message);
-        for (int i = 1; i <= 10; i++) {
-            message = properties.getProperty(code + "." + i);
-            if (message == null) {
-                break;
-            } else {
-                messages.add(message);
-            }
-        }
-        return messages;
+        return messages.getOrDefault(code, List.of());
     }
 }

@@ -30,7 +30,10 @@ public class I18nConfiguration {
                         locale2path -> Locale.forLanguageTag(locale2path.getKey()),
                         locale2path -> createMessageFormatter(locale2path.getValue(), Locale.forLanguageTag(locale2path.getKey()))
                 ));
-        return new MessageFormatResolverBundle(localeToSource);
+        return new MessageFormatResolverBundle(
+                localeToSource,
+                Locale.forLanguageTag(i18nProperties.defaultLocale())
+        );
     }
 
     private MessageFormatResolver createMessageFormatter(String messageFilePath, Locale locale) {
@@ -45,7 +48,6 @@ public class I18nConfiguration {
     ) {
         return new I18nService(
                 messageFormatResolverBundle,
-                Locale.forLanguageTag(i18nProperties.defaultLocale()),
                 LocaleContextHolder::getLocale,
                 i18nProperties.debugMode()
         );

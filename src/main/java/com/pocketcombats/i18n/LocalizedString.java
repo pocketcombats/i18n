@@ -3,7 +3,6 @@ package com.pocketcombats.i18n;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.pocketcombats.i18n.formatter.MessageFormatResolver;
-import org.jspecify.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,7 +34,23 @@ public abstract sealed class LocalizedString
         implements Serializable
         permits DirectLocalizedString, SimpleLocalizedString, FormattedLocalizedString, JoinedLocalizedString {
 
-    abstract String getMessage(MessageFormatResolver messageFormatResolver);
+    /**
+     * Resolves this message on its own.
+     * Prefer {@link #appendMessage} when resolving into a buffer that already exists.
+     */
+    String getMessage(MessageFormatResolver messageFormatResolver) {
+        StringBuffer out = new StringBuffer(64);
+        appendMessage(messageFormatResolver, out);
+        return out.toString();
+    }
+
+    /**
+     * Appends this message, fully resolved, to {@code out}.
+     * <p>
+     * Resolving a tree of localized strings through one caller-supplied sink avoids
+     * materializing an intermediate String for every node and copying it again into its parent.
+     */
+    abstract void appendMessage(MessageFormatResolver messageFormatResolver, StringBuffer out);
 
     /**
      * Creates a literal message that bypasses localization/formatting.

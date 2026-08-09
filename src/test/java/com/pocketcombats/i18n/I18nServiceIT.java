@@ -9,6 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -118,6 +119,56 @@ class I18nServiceIT {
         assertThat(i18nService.getMessageCodes())
                 .contains("character.archibald.name", "character.janny.name")
                 .contains("untranslated.key", "multiple.property.files.key");
+    }
+
+    @Test
+    void joinedLocalizedString() {
+        LocalizedString joined = LocalizedString.joined(", ", List.of(
+                LocalizedString.simple("character.janny.name"),
+                LocalizedString.simple("character.archibald.name")
+        ));
+        assertThat(i18nService.getMessage(joined)).isEqualTo("Janny, Archibald");
+    }
+
+    @Test
+    void joinedSingleElementHasNoDelimiter() {
+        LocalizedString joined = LocalizedString.joined(", ", List.of(
+                LocalizedString.simple("character.janny.name")
+        ));
+        assertThat(i18nService.getMessage(joined)).isEqualTo("Janny");
+    }
+
+    @Test
+    void joinedEmptyYieldsEmptyString() {
+        LocalizedString joined = LocalizedString.joined(", ", List.of());
+        assertThat(i18nService.getMessage(joined)).isEmpty();
+    }
+
+    @Test
+    void joinedOfFormattedWithNestedAndPlainArgs() {
+        LocalizedString joined = LocalizedString.joined(" || ", List.of(
+                LocalizedString.formatted(
+                        "character.janny.message.do_not_fear_you",
+                        Map.of("WHO", LocalizedString.simple("character.archibald.name"))
+                ),
+                LocalizedString.formatted(
+                        "character.janny.message.do_not_fear_you",
+                        Map.of("WHO", "Scrub")
+                )
+        ));
+        assertThat(i18nService.getMessage(joined))
+                .isEqualTo("I do not fear you, Archibald || I do not fear you, Scrub");
+    }
+
+    @Test
+    void numericArgumentIsFormattedByIcu() {
+        // Non-String args take the cloning path and must keep ICU's locale-aware number formatting
+        // rather than String.valueOf.
+        LocalizedString localizedString = LocalizedString.formatted(
+                "character.janny.message.do_not_fear_you",
+                Map.of("WHO", 1234567)
+        );
+        assertThat(i18nService.getMessage(localizedString)).isEqualTo("I do not fear you, 1,234,567");
     }
 
     @Test

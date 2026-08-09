@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Does not require formatting/localization, must be returned/processed as is.
  */
-@JsonTypeName( "direct")
+@JsonTypeName("direct")
 public final class DirectLocalizedString extends LocalizedString {
 
     private final String message;
@@ -31,6 +31,14 @@ public final class DirectLocalizedString extends LocalizedString {
 
     public String getMessage() {
         return message;
+    }
+
+    /**
+     * @param messageFormatResolver unused
+     */
+    @Override
+    void appendMessage(@Nullable MessageFormatResolver messageFormatResolver, StringBuffer out) {
+        out.append(message);
     }
 
     @Override

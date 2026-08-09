@@ -23,24 +23,21 @@ public class I18nService {
     private static final Log LOG = LogFactory.getLog(I18nService.class);
 
     private final MessageFormatResolverBundle messageSourceBundle;
-    private final Locale defaultLocale;
     private final Supplier<Locale> localeSupplier;
     private final boolean isDebugMode;
 
     /**
-     * @param messageSourceBundle resolvers for locales and their fallbacks
-     * @param defaultLocale default locale used by the bundle when a specific locale is not found
-     * @param localeSupplier supplies user locale at call time
-     * @param isDebugMode when {@code true}, messages are not resolved and {@code toString()} is returned
+     * @param messageSourceBundle resolvers for locales and their fallbacks, including the default locale
+     *                            the bundle falls back to
+     * @param localeSupplier      supplies user locale at call time
+     * @param isDebugMode         when {@code true}, messages are not resolved and {@code toString()} is returned
      */
     public I18nService(
             MessageFormatResolverBundle messageSourceBundle,
-            Locale defaultLocale,
             Supplier<Locale> localeSupplier,
             boolean isDebugMode
     ) {
         this.messageSourceBundle = messageSourceBundle;
-        this.defaultLocale = defaultLocale;
         this.localeSupplier = localeSupplier;
         this.isDebugMode = isDebugMode;
     }
@@ -68,7 +65,10 @@ public class I18nService {
             return null;
         }
 
-        return localizedString.getMessage(messageFormatResolver);
+        // One buffer for the whole tree
+        StringBuffer out = new StringBuffer(64);
+        localizedString.appendMessage(messageFormatResolver, out);
+        return out.toString();
     }
 
     /**
@@ -86,7 +86,7 @@ public class I18nService {
     }
 
     private @Nullable MessageFormatResolver resolveFormatResolver(Locale userLocale) {
-        MessageFormatResolver messageFormatResolver = messageSourceBundle.getForLocale(userLocale, defaultLocale);
+        MessageFormatResolver messageFormatResolver = messageSourceBundle.getForLocale(userLocale);
         if (messageFormatResolver == null) {
             LOG.error("Unable to find message formatter for locale=" + userLocale);
             return null;

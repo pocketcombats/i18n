@@ -22,11 +22,12 @@ public class FallbackMessageFormatResolver implements MessageFormatResolver {
     }
 
     /**
-     * Computed on call rather than in the constructor: instances of this class are created
-     * per message resolution, so the constructor stays on a hot path while this method does not.
+     * Computed on call rather than in the constructor: this is a cold path used only by callers
+     * that want the whole code set, so there is no point building the union for every configured
+     * locale up front when most of them will never be asked for it.
      *
      * @return every code this resolver can resolve, i.e., the delegate codes followed by
-     *         the fallback-only ones, matching the order in which they would be looked up
+     * the fallback-only ones, matching the order in which they would be looked up
      */
     @Override
     public Set<String> getMessageCodes() {

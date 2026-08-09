@@ -33,12 +33,19 @@ public class MessageSourceMessageFormatResolver implements MessageFormatResolver
 
     @Override
     public List<MessageFormat> getMessageFormatsForCode(String code) {
-        return messageFormatCache.computeIfAbsent(
-                code,
-                (key) -> getMessagesFromSource(key)
-                        .stream()
-                        .map(message -> new MessageFormat(message, locale))
-                        .toList()
-        );
+        List<MessageFormat> cached = messageFormatCache.get(code);
+        if (cached != null) {
+            return cached;
+        }
+        List<String> messages = getMessagesFromSource(code);
+        if (messages.isEmpty()) {
+            // Misses are deliberately not cached
+            return List.of();
+        }
+        List<MessageFormat> messageFormats = messages.stream()
+                .map(message -> new MessageFormat(message, locale))
+                .toList();
+        List<MessageFormat> raced = messageFormatCache.putIfAbsent(code, messageFormats);
+        return raced != null ? raced : messageFormats;
     }
 }

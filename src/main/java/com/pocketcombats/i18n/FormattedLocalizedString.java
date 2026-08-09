@@ -40,13 +40,19 @@ public final class FormattedLocalizedString extends LocalizedString {
         this.seed = seed;
     }
 
+    @Override
     public String getMessage(MessageFormatResolver messageFormatResolver) {
+        return super.getMessage(messageFormatResolver);
+    }
+
+    @Override
+    void appendMessage(MessageFormatResolver messageFormatResolver, StringBuffer out) {
         if (args.isEmpty()) {
             List<String> messages = messageFormatResolver.getMessagesFromSource(code);
             if (messages.isEmpty()) {
                 throw new IllegalArgumentException("No message for code " + code);
             }
-            return messages.get(seed % messages.size());
+            out.append(messages.get(seed % messages.size()));
         } else {
             Map<String, Object> formattedArgs = getFormattedArgs(messageFormatResolver);
             List<MessageFormat> messageFormats = messageFormatResolver.getMessageFormatsForCode(code);
@@ -54,8 +60,12 @@ public final class FormattedLocalizedString extends LocalizedString {
                 throw new IllegalArgumentException("No message for code " + code);
             }
             MessageFormat messageFormat = messageFormats.get(seed % messageFormats.size());
-            // MessageFormat is not thread-safe but supports cloning
-            return messageFormat.clone().format(formattedArgs);
+            if (!allArgsAreStrings(formattedArgs)) {
+                // MessageFormat is not thread-safe but supports cloning
+                messageFormat = messageFormat.clone();
+            }
+            // Formats straight into the tree's buffer
+            messageFormat.format(formattedArgs, out, null);
         }
     }
 
@@ -78,11 +88,6 @@ public final class FormattedLocalizedString extends LocalizedString {
             }
         }
         return mutableArgsCopy;
-    }
-
-    private static boolean containsFormattedLocalizedString(Map<String, Object> args) {
-        return args.values().stream()
-                .anyMatch(it -> it instanceof LocalizedString);
     }
 
     public String getCode() {
@@ -131,5 +136,31 @@ public final class FormattedLocalizedString extends LocalizedString {
                 .append(code)
                 .append(args)
                 .toHashCode();
+    }
+
+    private static boolean containsFormattedLocalizedString(Map<String, Object> args) {
+        for (Object value : args.values()) {
+            if (value instanceof LocalizedString) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the cached {@link MessageFormat} for this code can be shared instead of cloned.
+     * <p>
+     * Formatting mutates a MessageFormat only where it lazily creates a number formatter, a date
+     * formatter, or a plural/ordinal selector.
+     * Nested {@link LocalizedString} arguments have already been resolved to Strings by
+     * {@link #getFormattedArgs} before this check runs.
+     */
+    private static boolean allArgsAreStrings(Map<String, Object> args) {
+        for (Object value : args.values()) {
+            if (!(value instanceof String)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

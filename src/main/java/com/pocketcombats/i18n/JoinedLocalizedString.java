@@ -10,7 +10,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * Concatenates several {@link LocalizedString}s into a single message, resolving
@@ -32,10 +31,15 @@ public final class JoinedLocalizedString extends LocalizedString {
     }
 
     @Override
-    String getMessage(MessageFormatResolver messageFormatResolver) {
-        return strings.stream()
-                .map(string -> string.getMessage(messageFormatResolver))
-                .collect(Collectors.joining(delimiter));
+    void appendMessage(MessageFormatResolver messageFormatResolver, StringBuffer out) {
+        boolean first = true;
+        for (LocalizedString string : strings) {
+            if (!first) {
+                out.append(delimiter);
+            }
+            string.appendMessage(messageFormatResolver, out);
+            first = false;
+        }
     }
 
     @Override

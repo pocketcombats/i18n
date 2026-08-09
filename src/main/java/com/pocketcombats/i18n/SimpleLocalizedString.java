@@ -30,12 +30,18 @@ public final class SimpleLocalizedString extends LocalizedString {
         this.seed = seed;
     }
 
+    @Override
     public String getMessage(MessageFormatResolver messageFormatResolver) {
         List<String> messages = messageFormatResolver.getMessagesFromSource(code);
         if (messages.isEmpty()) {
             throw new IllegalArgumentException("No message for code " + code);
         }
         return messages.get(seed % messages.size());
+    }
+
+    @Override
+    void appendMessage(MessageFormatResolver messageFormatResolver, StringBuffer out) {
+        out.append(getMessage(messageFormatResolver));
     }
 
     public String getCode() {
